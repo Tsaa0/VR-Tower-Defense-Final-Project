@@ -6,6 +6,8 @@ public class MeleeTower : BaseTower {
     public float attackDuration = 2f;
     public Vector3 hitboxSize;
     public Vector3 hitboxOffset;
+    private Quaternion hitboxRotation; 
+    
 
     protected override void OnDeath() { }
 
@@ -20,7 +22,9 @@ public class MeleeTower : BaseTower {
         Vector3 offset = transform.forward * hitboxOffset.z + transform.right * hitboxOffset.x +
                          transform.up * hitboxOffset.y;
         //TODO Change where it spawns
-        GameObject hitbox = Instantiate(spawnedObject, transform.position + offset, transform.rotation);
+        GameObject hitbox =
+            Instantiate(spawnedObject, transform.position + offset, hitboxRotation);
+        hitbox.transform.localScale = hitboxSize;
         var script = hitbox.GetComponent<Hitbox>();
         script.damage = damage;
         script.destroyOnHit = false;
@@ -28,14 +32,14 @@ public class MeleeTower : BaseTower {
     }
 
     private void OnTriggerStay(Collider other) {
+        if (!active) return;
         if (other.CompareTag("Enemy")) {
             transform.LookAt(other.transform);
+            float yRotation = transform.eulerAngles.y;
+            hitboxRotation = Quaternion.Euler(0, yRotation, 0);
+            Debug.DrawRay(transform.position, transform.forward * (detectionRadius * transform.localScale.x),
+                          Color.red);
             Attack();
         }
-    }
-
-    private void Update() {
-        MoreDebug.DrawCircle(transform.position, detectionRadius, 32, Color.red);
-        currentAttackCooldown -= Time.deltaTime;
     }
 }
